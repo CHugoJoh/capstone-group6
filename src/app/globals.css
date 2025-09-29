@@ -116,33 +116,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #1a73e8;
+  background-color: #4291ff;
   color: white;
   padding: 10px 20px;
+  border-radius: 0px 0px 10px 10px;
 }
 
-.top-bar .logo {
+.logo {
+  font-family: Lemon Milk, Verdana, Geneva, Tahoma, sans-serif;
   display: flex;
-  align-items: center;
 }
-
-.top-bar .logo img {
-  height: 40px;
-  margin-right: 10px;
-}
-
 .top-bar nav a {
   color: white;
   text-decoration: none;
   margin-left: 20px;
   font-weight: bold;
 }
-
-.top-bar nav a:hover {
-  text-decoration: underline;
-}
-
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -150,4 +139,13 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes subtle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); } /* small movement */
+}
+
+.bounce-subtle {
+  animation: subtle-bounce 2s ease-in-out infinite;
 }
