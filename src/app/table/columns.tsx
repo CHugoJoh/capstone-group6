@@ -6,8 +6,27 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export const columns: ColumnDef<ReportData>[] = [
-    {accessorKey: "id",
+export const columns: ColumnDef<ReportData>[] = [{
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    )},
+    {
+        accessorKey: "id",
         header: "ID",
     },
     {
@@ -28,8 +47,7 @@ export const columns: ColumnDef<ReportData>[] = [
     return (
         <Button
         variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Date
         <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>

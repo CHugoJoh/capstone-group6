@@ -21,7 +21,6 @@ export default async function MainPage() {
         </Button>
       </div>
 
-      {/* Data table */}
       <DataTable<ReportData, any> columns={columns} data={data} />
     </main>
   )

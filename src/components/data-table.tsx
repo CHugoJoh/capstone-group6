@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   ColumnDef,
@@ -21,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { DataTablePagination } from "./data-table-pagination"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -32,10 +34,6 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
 
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
   const [globalFilter, setGlobalFilter] = React.useState("")
 
   const table = useReactTable({
@@ -47,9 +45,10 @@ export function DataTable<TData, TValue>({
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     globalFilterFn: (row, columnId, filterValue) => {
-      // Define which columns should be searched
-      const searchColumns = ["title", "description", "tags", "category", "site"]
+      const searchColumns = ["title", "description", "tags", "site"]
 
       return searchColumns.some((col) => {
         const value = row.getValue<string>(col)
@@ -57,9 +56,7 @@ export function DataTable<TData, TValue>({
       })
     },
   })
-
   return (
-    
     <div className="overflow-hidden rounded-md border">
       <div className="flex items-center py-4 ml-5">
         <Input
@@ -111,6 +108,9 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
+       <div>
+        <DataTablePagination table={table} />
+      </div>
     </div>
   )
 }
