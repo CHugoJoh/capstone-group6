@@ -8,7 +8,7 @@ export default function AnalyticsPage() {
       <p className="mt-4 text-lg">
         Explore detailed analytics and insights from your reports here.
       </p>
-      ChartPieSimple
+    <ChartPieSimple></ChartPieSimple>
     </div>
   )
 }
