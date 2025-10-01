@@ -32,31 +32,30 @@ export const columns: ColumnDef<ReportData>[] = [
   { accessorKey: "factory", header: "Factory" },
   { accessorKey: "location", header: "Location" },
   { accessorKey: "where_happened", header: "Where Happened" },
-  { accessorKey: "what_happened", header: "What Happened" },
+  { accessorKey: "what_happened", header: "What Happened", 
+    cell: ({ getValue }) => (
+    <div className="max-w-[300px] truncate">{getValue() as string}</div>
+  ), },
   { accessorKey: "reported_by", header: "Reported By" },
   { accessorKey: "responsible", header: "Responsible" },
   { accessorKey: "state", header: "State" },
   { accessorKey: "report_from", header: "Report From" },
-  {
-    accessorKey: "when_happened",
+  { accessorKey: "when_happened",
     header: ({ column }) => (
       <Button
         variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         When Happened
-        <ArrowUpDown className="ml-2 h-4 w-4" />
+        <ArrowUpDown className="h-4 w-4" />
       </Button>
+    ),
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{getValue() as string}</div>
     ),
   },
   { accessorKey: "area", header: "Area" },
   { accessorKey: "category", header: "Category" },
-  { accessorKey: "sub_category", header: "Sub-Category" },
   { accessorKey: "team", header: "Team" },
-  { accessorKey: "worker_type", header: "Worker Type" },
-  { accessorKey: "work_context", header: "Work Context" },
-  { accessorKey: "injury_type", header: "Injury Type" },
   { accessorKey: "reported_by_group", header: "Reported by Group" },
   { accessorKey: "risk_type", header: "Risk Type" },
-  { accessorKey: "overtime", header: "Overtime" },
 ]

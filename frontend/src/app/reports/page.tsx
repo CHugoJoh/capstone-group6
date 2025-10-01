@@ -10,16 +10,28 @@ import { getAllReportData } from "../api"
 export default function MainPage() {
   const [data, setData] = useState<ReportData[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     getAllReportData()
       .then((res) => setData(res))
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err)
+        setError("Failed to load reports")
+      })
       .finally(() => setLoading(false))
   }, [])
 
   if (loading) {
-    return <div>Loading...</div>
+    return <div className="p-4">Loading reports...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        <p>{error}</p>
+      </div>
+    )
   }
 
   return (

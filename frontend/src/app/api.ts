@@ -8,4 +8,15 @@ export async function getAllReportData(): Promise<ReportData[]> {
   const data: ReportData[] = await res.json();
   return data;
 }
+export async function getReportDataById(id: string): Promise<ReportData | null> {
+  const res = await fetch(`http://localhost:8000/incidents/${id}`);
+  if (res.status === 404) {
+    return null; // Report not found
+  }
+  if (!res.ok) {
+    throw new Error("Failed to fetch incident");
+  }
+  const data: ReportData = await res.json();
+  return data;
+}
 
