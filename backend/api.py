@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from pydantic import BaseModel
 
 app = FastAPI()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -92,3 +95,39 @@ def get_single_incident(incident_number: str):
             "overtime": record["Did the injury happen during overtime?"],
         }
     return {"error": "Incident not found"}
+
+class Report(BaseModel):
+    number: str
+    unit: str
+    factory: str
+    location: str
+    what_happened: str
+
+class AnalyzeRequest(BaseModel):
+    reports: list[Report]
+
+@app.post("/analyze")
+def analyze_reports(request: AnalyzeRequest):
+    client = OpenAI()
+
+    reports_text = "\n\n".join([
+        f"Report {r.number} - Unit: {r.unit}, Factory: {r.factory}, Location: {r.location}\nWhat happened: {r.what_happened}"
+        for r in request.reports
+    ])
+
+    response = client.responses.create(
+        model="gpt-4.1",
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": f"Analyze these incident reports and summarize key issues:\n\n{reports_text}"
+                    }
+                ]
+            }
+        ]
+    )
+
+    return {"message": response.output_text}
