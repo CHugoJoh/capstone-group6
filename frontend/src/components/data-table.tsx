@@ -1,9 +1,11 @@
 "use client"
+
 import * as React from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { analyzeReports } from "@/app/api"
+import { selectedRows } from "../app/table/columns"
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -11,7 +13,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-
 import {
   Table,
   TableBody,
@@ -21,7 +22,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DataTablePagination } from "./data-table-pagination"
-
 import {
   Dialog,
   DialogContent,
@@ -32,20 +32,22 @@ import {
 } from "@/components/ui/dialog"
 
 import { getReportDataById } from "@/app/api"
+import { getColumns } from "../app/table/columns"
+import { ReportData } from "../app/data/ReportData"
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+interface DataTableProps {
+  data: ReportData[]
 }
 
-export function DataTable<TData extends { title?: string; description?: string; [key: string]: any }, 
-TValue>({ columns, data, }
-  : DataTableProps<TData, TValue>) {
+export function DataTable({ data }: DataTableProps) {
   const [globalFilter, setGlobalFilter] = React.useState("")
-  const [selectedId, setSelectedId] = React.useState<string | number | null>(null)
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [reportData, setReportData] = React.useState<Record<string, any> | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+
+  // Memoized columns with access to setSelectedId
+  const columns = React.useMemo(() => getColumns(setSelectedId), [])
 
   const table = useReactTable({
     data,
@@ -57,23 +59,22 @@ TValue>({ columns, data, }
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     globalFilterFn: (row, columnId, filterValue) => {
-      const searchColumns = ["title", "description", "tags", "site"]
-      return searchColumns.some((col) => {
+      const searchableColumns = ["number", "unit", "factory", "location", "what_happened"]
+      return searchableColumns.some(col => {
         const value = row.getValue<string>(col)
         return value?.toString().toLowerCase().includes(filterValue.toLowerCase())
       })
     },
   })
 
-  // Fetch report details when dialog opens
+  // Fetch details when a row is selected
   React.useEffect(() => {
     if (!selectedId) return
-
     setLoading(true)
     setError(null)
     setReportData(null)
 
-    getReportDataById(String(selectedId))
+    getReportDataById(selectedId)
       .then((data) => setReportData(data))
       .catch((err) => setError(err.message ?? "Failed to load report"))
       .finally(() => setLoading(false))
@@ -85,38 +86,36 @@ TValue>({ columns, data, }
         <div className="flex items-center py-4 ml-5">
           <Input
             placeholder="Search reports..."
-            value={globalFilter ?? ""}
-            onChange={(event) => setGlobalFilter(event.target.value)}
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
             className="max-w-sm"
           />
         </div>
+
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map(header => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map(row => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => setSelectedId(row.original.number)} // <-- use ID
+                  onClick={() => setSelectedId(row.original.number)}
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -132,48 +131,39 @@ TValue>({ columns, data, }
             )}
           </TableBody>
         </Table>
+
         <div>
           <DataTablePagination table={table} />
         </div>
       </div>
-
-      {/* Dialog */}
       <Dialog
         open={!!selectedId}
         onOpenChange={(isOpen) => {
           if (!isOpen) setSelectedId(null)
-        }}
-      >
+        }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {loading
-                ? "Loading..."
-                : reportData?.title ?? reportData?.report_name ?? "Details"}
+              {loading ? "Loading..." : reportData?.number ?? "Report Details"}
             </DialogTitle>
             <DialogDescription>
-              {loading
-                ? "Fetching incident details..."
-                : reportData?.description ?? reportData?.details ?? ""}
+              {loading ? "Fetching report details..." : ""}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2 mt-4 max-h-[400px] overflow-y-auto pr-2">
             {loading && <p>Loading report data...</p>}
-            {error && <p className="text-red-500">Error: {error}</p>}
-            {!loading &&
-              !error &&
-              reportData &&
+            {error && <p className="text-red-500">{error}</p>}
+            {reportData &&
               Object.entries(reportData).map(([key, value]) => (
                 <p key={key} className="text-sm">
                   <strong>
-                    {key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}:
+                    {key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}:
                   </strong>{" "}
                   {String(value)}
                 </p>
               ))}
           </div>
-
           <DialogFooter>
             <Button variant="secondary" onClick={() => setSelectedId(null)}>
               Close
@@ -181,6 +171,27 @@ TValue>({ columns, data, }
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Button
+        className="mt-4 bg-blue-500 hover:bg-blue-700 text-white"
+        onClick={async () => {
+          if (!selectedRows.size) {
+            return alert("Please select some reports first.");
+          }
+
+          try {
+            const response = await analyzeReports(selectedRows);
+            console.log("AI Analysis result:", response);
+            alert("AI analysis complete! Check console for results.");
+          } catch (err) {
+            console.error(err);
+            alert("Failed to analyze reports.");
+          }
+        }}
+      >
+        Analyze Selected
+      </Button>
+
     </>
   )
 }

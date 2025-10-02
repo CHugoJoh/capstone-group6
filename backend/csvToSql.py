@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
-csv_path = r"C:\Users\hugoc\Desktop\Namnlöst kalkylark - Page 1.csv"
+csv_path = r"C:\Users\hugoc\Desktop\FY 2025 u_incident_and_accidents.xlsx - Page 1.csv"
 
 df = pd.read_csv(csv_path)
 

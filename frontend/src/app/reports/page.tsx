@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { columns } from "../table/columns"
 import { DataTable } from "../../components/data-table"
 import { ReportData } from "../data/ReportData"
 import { Button } from "@/components/ui/button"
@@ -42,7 +41,7 @@ export default function MainPage() {
           New Analysis
         </Button>
       </div>
-      <DataTable<ReportData, any> columns={columns} data={data} />
+      <DataTable data={data} />
     </main>
   )
 }

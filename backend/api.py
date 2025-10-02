@@ -92,3 +92,6 @@ def get_single_incident(incident_number: str):
             "overtime": record["Did the injury happen during overtime?"],
         }
     return {"error": "Incident not found"}
+@app.post("/analyze")
+def analyze_reports(incident_numbers: list[str]):
+    return "test"
