@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button"
 import { analyzeReports } from "@/app/api"
 import { selectedRows } from "../app/table/columns"
 import { Combobox } from "@/components/combobox"
+
+import { Calendar04 } from "@/components/date-picker"
+import { type DateRange } from "react-day-picker"
+
 import {
   flexRender,
   getCoreRowModel,
@@ -51,8 +55,9 @@ export function DataTable({ data }: DataTableProps) {
   const [factoryFilter, setFactoryFilter] = React.useState("")
   const [unitFilter, setUnitFilter] = React.useState("")
   const [locationFilter, setLocationFilter] = React.useState("")
-
-
+  //date range filtering
+  const [showDatePicker, setShowDatePicker] = React.useState(false)
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined)
 
   const factoryOptions = React.useMemo(() => {
     const uniqueFactories = Array.from(new Set(data.map(d => d.factory).filter(Boolean)))
@@ -67,18 +72,22 @@ export function DataTable({ data }: DataTableProps) {
     return uniqueLocations.map(l => ({ value: l, label: l }))
   }, [data])
 
-
-  //what will be shown in the table
+  //what will be shown in the table after filtering
   const filteredData = React.useMemo(() => {
-    return data.filter(d => {
-      return (
-        (factoryFilter ? d.factory === factoryFilter : true) &&
-        (unitFilter ? d.unit === unitFilter : true) &&
-        (locationFilter ? d.location === locationFilter : true)
-      )
-    })
-  }, [data, factoryFilter, unitFilter, locationFilter])
+  return data.filter((d) => {
+    const entryDate = new Date(d.when_happened) // adjust to your actual date field
+    const inRange =
+      (!dateRange?.from || entryDate >= dateRange.from) &&
+      (!dateRange?.to || entryDate <= dateRange.to)
 
+    return (
+      (factoryFilter ? d.factory === factoryFilter : true) &&
+      (unitFilter ? d.unit === unitFilter : true) &&
+      (locationFilter ? d.location === locationFilter : true) &&
+      inRange
+    )
+  })
+}, [data, factoryFilter, unitFilter, locationFilter, dateRange])
 
   const columns = React.useMemo(() => getColumns(setSelectedId), [])
   const [aiResult, setAiResult] = React.useState<string | null>(null);
@@ -106,7 +115,6 @@ export function DataTable({ data }: DataTableProps) {
     setLoading(true)
     setError(null)
     setReportData(null)
-
     getReportDataById(selectedId)
       .then((data) => setReportData(data))
       .catch((err) => setError(err.message ?? "Failed to load report"))
@@ -144,8 +152,15 @@ export function DataTable({ data }: DataTableProps) {
             placeholder="Filter by location..."
             className="ml-2"
           />
+          
+
+          <div className="ml-2 flex items-center gap-2">
+            <Calendar04
+              value={dateRange}
+              onChange={setDateRange}
+            />
+          </div>
         </div>
-        
 
         <Table>
           <TableHeader>
