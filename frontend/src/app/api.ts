@@ -19,17 +19,23 @@ export async function getReportDataById(id: string): Promise<ReportData | null> 
   const data: ReportData = await res.json();
   return data;
 }
-export async function analyzeReports(reports: ReportData[]): Promise<{ message: string | null }> {
+export async function analyzeReports(
+  reports: ReportData[],
+  prompt: string
+): Promise<{ message: string | null }> {
   const res = await fetch(`http://localhost:8000/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reports }),
+    body: JSON.stringify({ reports, prompt }),
   });
+
   if (!res.ok) {
     throw new Error("Failed to analyze reports");
   }
+
   return res.json();
 }
+
 
 
 

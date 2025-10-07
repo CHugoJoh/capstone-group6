@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  
@@ -96,15 +95,18 @@ def get_single_incident(incident_number: str):
         }
     return {"error": "Incident not found"}
 
+from typing import Optional
+
 class Report(BaseModel):
     number: str
     unit: str
     factory: str
-    location: str
+    location: Optional[str]
     what_happened: str
 
 class AnalyzeRequest(BaseModel):
     reports: list[Report]
+    prompt: str
 
 @app.post("/analyze")
 def analyze_reports(request: AnalyzeRequest):
@@ -123,7 +125,7 @@ def analyze_reports(request: AnalyzeRequest):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": f"Analyze these incident reports and summarize key issues:\n\n{reports_text}"
+                        "text": f"{request.prompt}\n\n{reports_text}"
                     }
                 ]
             }
