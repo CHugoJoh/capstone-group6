@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { analyzeReports } from "@/app/api"
 import { selectedRows } from "../app/table/columns"
+import { Combobox } from "@/components/combobox"
 import {
   flexRender,
   getCoreRowModel,
@@ -46,11 +47,44 @@ export function DataTable({ data }: DataTableProps) {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
+  //combobox filtering
+  const [factoryFilter, setFactoryFilter] = React.useState("")
+  const [unitFilter, setUnitFilter] = React.useState("")
+  const [locationFilter, setLocationFilter] = React.useState("")
+
+
+
+  const factoryOptions = React.useMemo(() => {
+    const uniqueFactories = Array.from(new Set(data.map(d => d.factory).filter(Boolean)))
+    return uniqueFactories.map(f => ({ value: f, label: f }))
+  }, [data])
+  const unitOptions = React.useMemo(() => {
+    const uniqueUnits = Array.from(new Set(data.map(d => d.unit).filter(Boolean)))
+    return uniqueUnits.map(u => ({ value: u, label: u }))
+  }, [data])
+  const locationOptions = React.useMemo(() => {
+    const uniqueLocations = Array.from(new Set(data.map(d => d.location).filter(Boolean)))
+    return uniqueLocations.map(l => ({ value: l, label: l }))
+  }, [data])
+
+
+  //what will be shown in the table
+  const filteredData = React.useMemo(() => {
+    return data.filter(d => {
+      return (
+        (factoryFilter ? d.factory === factoryFilter : true) &&
+        (unitFilter ? d.unit === unitFilter : true) &&
+        (locationFilter ? d.location === locationFilter : true)
+      )
+    })
+  }, [data, factoryFilter, unitFilter, locationFilter])
+
+
   const columns = React.useMemo(() => getColumns(setSelectedId), [])
   const [aiResult, setAiResult] = React.useState<string | null>(null);
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
@@ -58,7 +92,7 @@ export function DataTable({ data }: DataTableProps) {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    globalFilterFn: (row, columnId, filterValue) => {
+    globalFilterFn: (row, filterValue) => {
       const searchableColumns = ["number", "unit", "factory", "location", "what_happened"]
       return searchableColumns.some(col => {
         const value = row.getValue<string>(col)
@@ -82,14 +116,36 @@ export function DataTable({ data }: DataTableProps) {
   return (
     <>
       <div className="overflow-hidden rounded-md border">
-        <div className="flex items-center py-4 ml-5">
+        <div className="flex items-center py-4 ml-">
           <Input
             placeholder="Search reports..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="max-w-sm"
+            className="max-w-sm ml-5"
+          />
+          <Combobox
+            options={factoryOptions}
+            value={factoryFilter}
+            onChange={setFactoryFilter}
+            placeholder="Filter by factory..."
+            className="ml-2"
+          />
+          <Combobox
+            options={unitOptions}
+            value={unitFilter}
+            onChange={setFactoryFilter}
+            placeholder="Filter by unit..."
+            className="ml-2"
+          />
+          <Combobox
+            options={locationOptions}
+            value={locationFilter}
+            onChange={setFactoryFilter}
+            placeholder="Filter by location..."
+            className="ml-2"
           />
         </div>
+        
 
         <Table>
           <TableHeader>
