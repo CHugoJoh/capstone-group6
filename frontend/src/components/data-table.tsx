@@ -3,10 +3,7 @@
 import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { analyzeReports } from "@/app/api"
-import { selectedRows } from "../app/table/columns"
 import { Combobox } from "@/components/combobox"
-
 import { Calendar04 } from "@/components/date-picker"
 import { type DateRange } from "react-day-picker"
 
@@ -39,6 +36,8 @@ import {
 import { getReportDataById } from "@/app/api"
 import { getColumns } from "../app/table/columns"
 import { ReportData } from "../app/data/ReportData"
+import { AiButtonGroup } from "./ai-button-group"
+import { AiCustomPrompt } from "./ai-custom-prompt"
 
 interface DataTableProps {
   data: ReportData[]
@@ -55,8 +54,8 @@ export function DataTable({ data }: DataTableProps) {
   const [factoryFilter, setFactoryFilter] = React.useState("")
   const [unitFilter, setUnitFilter] = React.useState("")
   const [locationFilter, setLocationFilter] = React.useState("")
+
   //date range filtering
-  const [showDatePicker, setShowDatePicker] = React.useState(false)
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined)
 
   const factoryOptions = React.useMemo(() => {
@@ -75,7 +74,7 @@ export function DataTable({ data }: DataTableProps) {
   //what will be shown in the table after filtering
   const filteredData = React.useMemo(() => {
   return data.filter((d) => {
-    const entryDate = new Date(d.when_happened) // adjust to your actual date field
+    const entryDate = new Date(d.when_happened)
     const inRange =
       (!dateRange?.from || entryDate >= dateRange.from) &&
       (!dateRange?.to || entryDate <= dateRange.to)
@@ -107,6 +106,12 @@ export function DataTable({ data }: DataTableProps) {
         const value = row.getValue<string>(col)
         return value?.toString().toLowerCase().includes(filterValue.toLowerCase())
       })
+    },
+      initialState: {
+      pagination: {
+        pageSize: 20,
+        pageIndex: 0,
+      },
     },
   })
 
@@ -141,19 +146,17 @@ export function DataTable({ data }: DataTableProps) {
           <Combobox
             options={unitOptions}
             value={unitFilter}
-            onChange={setFactoryFilter}
+            onChange={setUnitFilter}
             placeholder="Filter by unit..."
             className="ml-2"
           />
           <Combobox
             options={locationOptions}
             value={locationFilter}
-            onChange={setFactoryFilter}
+            onChange={setLocationFilter}
             placeholder="Filter by location..."
             className="ml-2"
           />
-          
-
           <div className="ml-2 flex items-center gap-2">
             <Calendar04
               value={dateRange}
@@ -205,30 +208,13 @@ export function DataTable({ data }: DataTableProps) {
           <DataTablePagination table={table} />
         </div>
 
-        <Button
-          className="mt-4 bg-blue-500 hover:bg-blue-700 text-white ml-5 mb-5"
-          onClick={async () => {
-            if (!selectedRows.size) {
-              return alert("Please select some reports first.");
-            }
+        <hr className="my-8 border-gray-300" />
+        <h1 className="ml-6 mt-4"> AI Analysis</h1>
 
-            const reports = data.filter(row => selectedRows.has(row.number));
-
-            try {
-              console.log("Analyzing reports:", reports);
-              const response = await analyzeReports(reports); // <-- pass full objects
-              setAiResult(response.message); // store result in React state
-            } catch (err) {
-              console.error(err);
-              alert("Failed to analyze reports.");
-            }
-          }}
-        >
-          Analyze Selected Reports
-        </Button>
+        <AiButtonGroup data={filteredData} onResult={setAiResult} />
+        <AiCustomPrompt data={filteredData} onResult={setAiResult} />
 
       </div>
-
       <Dialog
         open={!!selectedId}
         onOpenChange={(isOpen) => {
