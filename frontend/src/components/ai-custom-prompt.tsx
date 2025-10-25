@@ -23,7 +23,7 @@ export function AiCustomPrompt({ data, onResult }: AiCustomPromptProps) {
       />
       <AiButton
         data={data}
-        prompt={customPrompt || "Analyze selected reports."}
+        prompt={"Custom prompt: " + customPrompt + ". Analyze selected reports taking into account the custom prompt."}
         label="Analyze Custom"
         onResult={onResult}
       />
