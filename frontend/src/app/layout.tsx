@@ -9,7 +9,7 @@ import { useState } from "react"
 import { Toaster } from "sonner"
 
 function Header() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
 

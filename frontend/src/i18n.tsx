@@ -2,31 +2,28 @@
 
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import HttpApi from "i18next-http-backend";
 
-const resources = {
-  en: {
-    translation: {home: {
-      welcome: "Welcome to",
-    },
-      welcome: "Welcome to our site!",
-    },
-  },
-  fr: {
-    translation: {
-      welcome: "Bienvenue sur notre site!",
-    },
-  },
+export const supportedLngs = {
+  en: "English",
+  sv: "Swedish",
 };
 
 i18n
+  .use(HttpApi)
   .use(initReactI18next)
   .init({
-    resources,
     lng: "en",
     fallbackLng: "en",
+    supportedLngs: Object.keys(supportedLngs),
     interpolation: {
       escapeValue: false,
     },
+    backend: {
+      loadPath: "/locales/{{lng}}/translation.json",
+    },
+    ns: ["home"],
+    defaultNS: "home",
   });
 
 export default i18n;

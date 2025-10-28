@@ -1,0 +1,11 @@
+{
+    "home": {
+        "welcome": "Welcome to",
+        "tutorial_1": "blahblahblah"
+    },
+    "settings": {
+        "settings": "Settings",
+        "language": "Language",
+        "select_language": "Select your preferred language"
+    }
+}
