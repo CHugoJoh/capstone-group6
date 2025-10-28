@@ -6,7 +6,7 @@ import { UserPrompt } from "../data/UserPrompt"
 import { useAuth } from "../context/AuthContext"
 
 export default function UserPage() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [prompts, setPrompts] = useState<UserPrompt[]>([])
   const [selectedPrompt, setSelectedPrompt] = useState<UserPrompt | null>(null)
 

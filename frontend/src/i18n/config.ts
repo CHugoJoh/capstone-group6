@@ -2,6 +2,7 @@
 
 // Core i18next library.
 import i18n from "i18next";                      
+import { Home } from "lucide-react";
 // Bindings for React: allow components to
 // re-render when language changes.
 import { initReactI18next } from "react-i18next";
@@ -46,7 +47,11 @@ i18n
         // `translation` is the default namespace.
         // More details about namespaces shortly.
         translation: {
+            home: {
+                welcome: "Welcome to"
+            },
           hello_world: "Hello, World!",
+
         },
       },
       // Arabic

@@ -1,10 +1,12 @@
 import "../globals.css"
-import i18n from "i18next";     
+import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
+  const { t } = useTranslation();
+
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold">Welcome to</h1>
+      <h1 className="text-3xl font-bold">{t("home.welcome")}</h1>
       <h2 className="logo text-9xl bounce-subtle">RAPPORTÖR</h2>
       <h2 className="mt-4 text-2xl">The Intelligent Data Quality & Analytics Platform</h2>
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6 max-w-3xl mt-10">
