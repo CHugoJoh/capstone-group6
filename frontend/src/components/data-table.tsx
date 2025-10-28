@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Combobox } from "@/components/combobox"
 import { Calendar04 } from "@/components/date-picker"
 import { type DateRange } from "react-day-picker"
+import { toast } from "sonner"
 
 import {
   flexRender,
@@ -38,6 +39,7 @@ import { getColumns } from "../app/table/columns"
 import { ReportData } from "../app/data/ReportData"
 import { AiButtonGroup } from "./ai-button-group"
 import { AiCustomPrompt } from "./ai-custom-prompt"
+import AIAnalysis from "./ai-analysis"
 
 interface DataTableProps {
   data: ReportData[]
@@ -209,7 +211,7 @@ export function DataTable({ data }: DataTableProps) {
         </div>
 
         <hr className="my-8 border-gray-300" />
-        <h1 className="ml-6 mt-4"> AI Analysis</h1>
+        <h1 className="ml-6 mt-4"> AI Analysis options</h1>
 
         <AiButtonGroup data={filteredData} onResult={setAiResult} />
         <AiCustomPrompt data={filteredData} onResult={setAiResult} />
@@ -251,14 +253,7 @@ export function DataTable({ data }: DataTableProps) {
         </DialogContent>
       </Dialog>
 
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 max-w-3xl mt-10">
-        <h3 className="font-semibold mb-3">AI Analysis Results:</h3>
-        {aiResult ? (
-          <p className="whitespace-pre-wrap">{aiResult}</p>
-        ) : (
-          <p className="text-gray-500">No analysis yet.</p>
-        )}
-      </div>
+      <AIAnalysis aiResult={aiResult} />
     </>
   )
 }

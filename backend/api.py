@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
+from Types.User import User
+import bcrypt
 
 app = FastAPI()
 
@@ -24,6 +26,7 @@ def get_connection():
         port=5432
     )
 
+#Incident region#
 @app.get("/incidents")
 def get_incidents():
     conn = get_connection()
@@ -105,6 +108,7 @@ class Report(BaseModel):
     what_happened: str
 
 class AnalyzeRequest(BaseModel):
+    user_id: str
     reports: list[Report]
     prompt: str
 
@@ -117,19 +121,145 @@ def analyze_reports(request: AnalyzeRequest):
         for r in request.reports
     ])
 
+    full_prompt = f"{request.prompt}\n\n{reports_text}"
+
     response = client.responses.create(
         model="gpt-4.1",
-        input=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": f"{request.prompt}\n\n{reports_text}"
-                    }
-                ]
-            }
-        ]
+        input=[{"role": "user", "content": [{"type": "input_text", "text": full_prompt}]}]
     )
 
-    return {"message": response.output_text}
+    output_text = response.output_text
+
+    # Store the result
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO user_prompts (user_id, prompt_text, body)
+        VALUES (%s, %s, %s);
+        """,
+        (request.user_id, full_prompt, output_text)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"message": output_text}
+
+#User region
+
+class User(BaseModel):
+    user_id: Optional[str]
+    first_name: str
+    last_name: str
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.get("/users")
+def get_users():
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT user_id, first_name, last_name, email FROM users;")
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return records
+
+@app.get("/users/{user_id}")
+def get_user(user_id: str):
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT user_id, first_name, last_name, email FROM users WHERE user_id = %s;", (user_id,))
+    record = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="User not found")
+    return record
+
+@app.post("/users")
+def create_user(user: User):
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Hash password before storing
+    hashed_pw = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+    cursor.execute("""
+        INSERT INTO users (user_id, first_name, last_name, email, password)
+        VALUES (gen_random_uuid(), %s, %s, %s, %s)
+        RETURNING user_id, first_name, last_name, email;
+    """, (user.first_name, user.last_name, user.email, hashed_pw))
+
+    new_user = cursor.fetchone()
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return new_user
+
+@app.post("/auth/login")
+def login_user(login_request: LoginRequest):
+    email = login_request.email
+    password = login_request.password
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM users WHERE email = %s;", (email,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not user or user["password"] != password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    return {
+        "user_id": user["user_id"],
+        "first_name": user["first_name"],
+        "last_name": user["last_name"],
+        "email": user["email"]
+    }
+
+# Prompt region #
+class Prompt(BaseModel):
+    prompt_id: Optional[str]
+    user_id: str
+    prompt_text: str
+    body: str
+
+@app.get("/prompts")
+def get_prompts():
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM user_prompts;")
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return records
+
+@app.get("/prompts/{prompt_id}")
+def get_prompt(prompt_id: str):
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM user_prompts WHERE prompt_id = %s;", (prompt_id,))
+    record = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    return record
+
+@app.get("/prompts/user/{user_id}")
+def get_user_prompts(user_id: str):
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM user_prompts WHERE user_id = %s;", (user_id,))
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return records

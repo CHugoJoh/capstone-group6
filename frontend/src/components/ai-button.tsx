@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { analyzeReports } from "@/app/api"
 import { selectedRows } from "@/app/table/columns"
 import { ReportData } from "@/app/data/ReportData"
+import { toast } from "sonner";
+import { useAuth } from "@/app/context/AuthContext"
+
 
 interface AiButtonProps {
   data: ReportData[]
@@ -14,6 +17,7 @@ interface AiButtonProps {
 }
 
 export function AiButton({ data, prompt, label, onResult }: AiButtonProps) {
+  const { user } = useAuth()
   const [loading, setLoading] = React.useState(false)
 
   const handleAnalyze = async () => {
@@ -34,11 +38,13 @@ export function AiButton({ data, prompt, label, onResult }: AiButtonProps) {
 
     try {
       setLoading(true)
-      const response = await analyzeReports(reports, prompt)
+      const response = await analyzeReports(user?.user_id ?? null, reports, prompt)
       onResult(response.message || "AI analysis complete!")
+      toast("AI analysis complete! Response has been saved.");
     } catch (err) {
       console.error(err)
       alert("Failed to analyze reports.")
+      toast("AI analysis failed!");
     } finally {
       setLoading(false)
     }
