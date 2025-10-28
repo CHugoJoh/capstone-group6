@@ -1,8 +1,11 @@
 {
-    "Resources": {
-        "home": {
-            "welcome": "Välkommen till",
-            "tutorial_1": "blahblahblah"
-        }
+    "home": {
+        "welcome": "Välkommen till",
+        "tutorial_1": "blahblahblah"
+    },
+    "settings": {
+        "settings": "Inställningar",
+        "language": "Språk",
+        "select_language": "Välj ditt föredragna språk"
     }
 }
