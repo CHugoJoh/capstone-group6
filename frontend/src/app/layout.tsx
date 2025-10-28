@@ -2,11 +2,14 @@
 
 import Image from "next/image"
 import "./globals.css"
+import "../i18n"
+import { useTranslation } from "react-i18next"
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import { useState } from "react"
 import { Toaster } from "sonner"
 
 function Header() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
 

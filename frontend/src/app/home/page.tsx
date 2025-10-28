@@ -1,3 +1,5 @@
+"use client";
+
 import "../globals.css"
 import { useTranslation } from "react-i18next";
 
